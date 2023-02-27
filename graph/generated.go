@@ -59,6 +59,7 @@ type ComplexityRoot struct {
 		DeletedAt func(childComplexity int) int
 		Email     func(childComplexity int) int
 		ID        func(childComplexity int) int
+		Lastname  func(childComplexity int) int
 		Name      func(childComplexity int) int
 		UpdatedAt func(childComplexity int) int
 		Version   func(childComplexity int) int
@@ -127,7 +128,7 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.User.DeletedAt(childComplexity), true
 
-	case "User.Email":
+	case "User.email":
 		if e.complexity.User.Email == nil {
 			break
 		}
@@ -141,7 +142,14 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.User.ID(childComplexity), true
 
-	case "User.Name":
+	case "User.lastname":
+		if e.complexity.User.Lastname == nil {
+			break
+		}
+
+		return e.complexity.User.Lastname(childComplexity), true
+
+	case "User.name":
 		if e.complexity.User.Name == nil {
 			break
 		}
@@ -364,10 +372,12 @@ func (ec *executionContext) fieldContext_Mutation_createUser(ctx context.Context
 				return ec.fieldContext_User_updatedAt(ctx, field)
 			case "deletedAt":
 				return ec.fieldContext_User_deletedAt(ctx, field)
-			case "Name":
-				return ec.fieldContext_User_Name(ctx, field)
-			case "Email":
-				return ec.fieldContext_User_Email(ctx, field)
+			case "name":
+				return ec.fieldContext_User_name(ctx, field)
+			case "lastname":
+				return ec.fieldContext_User_lastname(ctx, field)
+			case "email":
+				return ec.fieldContext_User_email(ctx, field)
 			case "activated":
 				return ec.fieldContext_User_activated(ctx, field)
 			case "version":
@@ -436,10 +446,12 @@ func (ec *executionContext) fieldContext_Query_users(ctx context.Context, field 
 				return ec.fieldContext_User_updatedAt(ctx, field)
 			case "deletedAt":
 				return ec.fieldContext_User_deletedAt(ctx, field)
-			case "Name":
-				return ec.fieldContext_User_Name(ctx, field)
-			case "Email":
-				return ec.fieldContext_User_Email(ctx, field)
+			case "name":
+				return ec.fieldContext_User_name(ctx, field)
+			case "lastname":
+				return ec.fieldContext_User_lastname(ctx, field)
+			case "email":
+				return ec.fieldContext_User_email(ctx, field)
 			case "activated":
 				return ec.fieldContext_User_activated(ctx, field)
 			case "version":
@@ -745,8 +757,8 @@ func (ec *executionContext) fieldContext_User_deletedAt(ctx context.Context, fie
 	return fc, nil
 }
 
-func (ec *executionContext) _User_Name(ctx context.Context, field graphql.CollectedField, obj *model.User) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_User_Name(ctx, field)
+func (ec *executionContext) _User_name(ctx context.Context, field graphql.CollectedField, obj *model.User) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_User_name(ctx, field)
 	if err != nil {
 		return graphql.Null
 	}
@@ -776,7 +788,7 @@ func (ec *executionContext) _User_Name(ctx context.Context, field graphql.Collec
 	return ec.marshalNString2string(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) fieldContext_User_Name(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+func (ec *executionContext) fieldContext_User_name(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "User",
 		Field:      field,
@@ -789,8 +801,52 @@ func (ec *executionContext) fieldContext_User_Name(ctx context.Context, field gr
 	return fc, nil
 }
 
-func (ec *executionContext) _User_Email(ctx context.Context, field graphql.CollectedField, obj *model.User) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_User_Email(ctx, field)
+func (ec *executionContext) _User_lastname(ctx context.Context, field graphql.CollectedField, obj *model.User) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_User_lastname(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Lastname, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	fc.Result = res
+	return ec.marshalNString2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_User_lastname(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "User",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _User_email(ctx context.Context, field graphql.CollectedField, obj *model.User) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_User_email(ctx, field)
 	if err != nil {
 		return graphql.Null
 	}
@@ -820,7 +876,7 @@ func (ec *executionContext) _User_Email(ctx context.Context, field graphql.Colle
 	return ec.marshalNString2string(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) fieldContext_User_Email(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+func (ec *executionContext) fieldContext_User_email(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "User",
 		Field:      field,
@@ -2695,7 +2751,7 @@ func (ec *executionContext) unmarshalInputNewUserInput(ctx context.Context, obj 
 		asMap[k] = v
 	}
 
-	fieldsInOrder := [...]string{"name", "lastName", "email"}
+	fieldsInOrder := [...]string{"name", "lastName", "email", "password"}
 	for _, k := range fieldsInOrder {
 		v, ok := asMap[k]
 		if !ok {
@@ -2723,6 +2779,14 @@ func (ec *executionContext) unmarshalInputNewUserInput(ctx context.Context, obj 
 
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("email"))
 			it.Email, err = ec.unmarshalNString2string(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		case "password":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("password"))
+			it.Password, err = ec.unmarshalNString2string(ctx, v)
 			if err != nil {
 				return it, err
 			}
@@ -2859,16 +2923,23 @@ func (ec *executionContext) _User(ctx context.Context, sel ast.SelectionSet, obj
 
 			out.Values[i] = ec._User_deletedAt(ctx, field, obj)
 
-		case "Name":
+		case "name":
 
-			out.Values[i] = ec._User_Name(ctx, field, obj)
+			out.Values[i] = ec._User_name(ctx, field, obj)
 
 			if out.Values[i] == graphql.Null {
 				invalids++
 			}
-		case "Email":
+		case "lastname":
 
-			out.Values[i] = ec._User_Email(ctx, field, obj)
+			out.Values[i] = ec._User_lastname(ctx, field, obj)
+
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
+		case "email":
+
+			out.Values[i] = ec._User_email(ctx, field, obj)
 
 			if out.Values[i] == graphql.Null {
 				invalids++

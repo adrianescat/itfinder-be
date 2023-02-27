@@ -8,4 +8,5 @@ import (
 	_ "github.com/99designs/gqlgen/graphql/introspection"
 	_ "github.com/lib/pq"
 	_ "github.com/sakirsensoy/genv"
+	_ "golang.org/x/crypto/bcrypt"
 )

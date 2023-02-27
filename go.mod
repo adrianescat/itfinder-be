@@ -7,6 +7,7 @@ require (
 	github.com/lib/pq v1.10.7
 	github.com/sakirsensoy/genv v1.0.1
 	github.com/vektah/gqlparser/v2 v2.5.1
+	golang.org/x/crypto v0.0.0-20210921155107-089bfa567519
 )
 
 require (

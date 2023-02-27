@@ -10,20 +10,22 @@ type User {
   createdAt: Time
   updatedAt: Time
   deletedAt: Time
-  Name:     String!
-  Email:     String!
+  name:     String!
+  lastname:     String!
+  email:     String!
   activated: Boolean
   version:   Int
-}
-
-type Query {
-  users: [User!]!
 }
 
 input NewUserInput {
   name: String!
   lastName: String!
   email: String!
+  password: String!
+}
+
+type Query {
+  users: [User!]!
 }
 
 type Mutation {

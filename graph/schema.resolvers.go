@@ -6,8 +6,11 @@ package graph
 
 import (
 	"context"
+	"errors"
 	"fmt"
+
 	"itfinder.adrianescat.com/graph/model"
+	"itfinder.adrianescat.com/internal/validator"
 )
 
 // CreateUser is the resolver for the createUser field.
@@ -19,7 +22,18 @@ func (r *mutationResolver) CreateUser(ctx context.Context, input model.NewUserIn
 		Activated: false,
 	}
 
-	err := r.Models.Users.Insert(user)
+	err := user.Password.Set(input.Password)
+	if err != nil {
+		return nil, err
+	}
+
+	v := validator.New()
+
+	if model.ValidateUser(v, user); !v.Valid() {
+		return nil, errors.New("wrong inputs")
+	}
+
+	err = r.Models.Users.Insert(user)
 
 	if err != nil {
 		r.Logger.PrintError(fmt.Errorf("%s", err), nil)
@@ -27,12 +41,18 @@ func (r *mutationResolver) CreateUser(ctx context.Context, input model.NewUserIn
 	}
 
 	return user, nil
-
 }
 
 // Users is the resolver for the users field.
 func (r *queryResolver) Users(ctx context.Context) ([]*model.User, error) {
-	panic(fmt.Errorf("not implemented: Users - users"))
+	users, err := r.Models.Users.GetAll()
+
+	if err != nil {
+		r.Logger.PrintError(fmt.Errorf("%s", err), nil)
+		return nil, err
+	}
+
+	return users, nil
 }
 
 // Mutation returns MutationResolver implementation.

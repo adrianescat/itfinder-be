@@ -10,10 +10,6 @@ import (
 	"net/http"
 )
 
-type ApplicationKeyType string
-
-var appKey ApplicationKeyType = "APP"
-
 func (app *app) serve(db *sql.DB) error {
 	srv := handler.NewDefaultServer(graph.NewExecutableSchema(graph.Config{Resolvers: &graph.Resolver{
 		Models: model.NewModels(db),
