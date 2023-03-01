@@ -5,6 +5,7 @@ go 1.20
 require (
 	github.com/99designs/gqlgen v0.17.24
 	github.com/julienschmidt/httprouter v1.3.0
+	github.com/justinas/alice v1.2.0
 	github.com/lib/pq v1.10.7
 	github.com/sakirsensoy/genv v1.0.1
 	github.com/vektah/gqlparser/v2 v2.5.1

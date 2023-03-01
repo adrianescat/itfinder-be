@@ -5,7 +5,6 @@ package graph
 import (
 	"itfinder.adrianescat.com/graph/model"
 	"itfinder.adrianescat.com/internal/jsonlog"
-	"sync"
 )
 
 // This file will not be regenerated automatically.
@@ -15,5 +14,4 @@ import (
 type Resolver struct {
 	Models model.Models
 	Logger *jsonlog.Logger
-	Wg     sync.WaitGroup
 }

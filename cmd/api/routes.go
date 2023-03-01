@@ -5,6 +5,7 @@ import (
 	"github.com/99designs/gqlgen/graphql/handler"
 	"github.com/99designs/gqlgen/graphql/playground"
 	"github.com/julienschmidt/httprouter"
+	"github.com/justinas/alice"
 	"itfinder.adrianescat.com/graph"
 	"itfinder.adrianescat.com/graph/model"
 	"net/http"
@@ -18,7 +19,6 @@ func (app *app) routes(db *sql.DB) http.Handler {
 	gql := handler.NewDefaultServer(graph.NewExecutableSchema(graph.Config{Resolvers: &graph.Resolver{
 		Models: model.NewModels(db),
 		Logger: app.logger,
-		Wg:     app.wg,
 	}}))
 
 	plg := playground.Handler("GraphQL playground", "/query")
@@ -31,5 +31,7 @@ func (app *app) routes(db *sql.DB) http.Handler {
 		plg.ServeHTTP(w, req)
 	})
 
-	return router
+	standard := alice.New(app.recoverPanic, app.logRequest, secureHeaders)
+
+	return standard.Then(router)
 }
