@@ -4,8 +4,10 @@ import (
 	"context"
 	"database/sql"
 	"errors"
+	"fmt"
 	"golang.org/x/crypto/bcrypt"
 	"itfinder.adrianescat.com/internal/validator"
+	"strings"
 	"time"
 )
 
@@ -18,10 +20,10 @@ var AnonymousUser = &User{}
 type User struct {
 	ID        int64     `json:"id"`
 	CreatedAt time.Time `json:"created_at"`
-	UpdatedAt time.Time `json:"created_at"`
-	DeletedAt time.Time `json:"created_at"`
+	UpdatedAt time.Time `json:"-"`
+	DeletedAt time.Time `json:"-"`
 	Name      string    `json:"name"`
-	Lastname  string    `json:"name"`
+	Lastname  string    `json:"lastname"`
 	Email     string    `json:"email"`
 	Password  Password  `json:"-"`
 	Activated bool      `json:"activated"`
@@ -174,6 +176,84 @@ func (m UserModel) GetAll() ([]*User, error) {
 		return nil, err // Update this to return an empty Metadata struct.
 	}
 
-	// Include the metadata struct when returning.
 	return users, nil
+}
+
+func (m UserModel) GetUsersByIds(ids []string) ([]*User, error) {
+	idString := strings.Join(ids, ",")
+
+	query := fmt.Sprintf("SELECT id, created_at, updated_at, name, lastname, email, activated, version FROM users WHERE id IN (%s)", idString)
+
+	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
+	defer cancel()
+
+	rows, err := m.DB.QueryContext(ctx, query)
+
+	if err != nil {
+		return nil, err
+	}
+
+	defer rows.Close()
+
+	var users []*User
+
+	for rows.Next() {
+		var user User
+		err := rows.Scan(
+			&user.ID,
+			&user.CreatedAt,
+			&user.UpdatedAt,
+			&user.Name,
+			&user.Lastname,
+			&user.Email,
+			&user.Activated,
+			&user.Version,
+		)
+
+		if err != nil {
+			return nil, err // Update this to return an empty Metadata struct.
+		}
+
+		users = append(users, &user)
+	}
+
+	if err = rows.Err(); err != nil {
+		return nil, err // Update this to return an empty Metadata struct.
+	}
+
+	return users, nil
+}
+
+func (m UserModel) GetById(id int64) (*User, error) {
+	query := `
+		SELECT id, created_at, name, lastname, email, activated, version
+		FROM users
+		WHERE id = $1
+	`
+	var user User
+
+	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
+
+	defer cancel()
+
+	err := m.DB.QueryRowContext(ctx, query, id).Scan(
+		&user.ID,
+		&user.CreatedAt,
+		&user.Name,
+		&user.Lastname,
+		&user.Email,
+		&user.Activated,
+		&user.Version,
+	)
+
+	if err != nil {
+		switch {
+		case errors.Is(err, sql.ErrNoRows):
+			return nil, ErrRecordNotFound
+		default:
+			return nil, err
+		}
+	}
+
+	return &user, nil
 }

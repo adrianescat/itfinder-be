@@ -6,9 +6,12 @@ package graph
 
 import (
 	"context"
+	"encoding/json"
 	"errors"
 	"fmt"
+	"strconv"
 
+	"itfinder.adrianescat.com/graph/dataloaders"
 	"itfinder.adrianescat.com/graph/model"
 	"itfinder.adrianescat.com/internal/validator"
 )
@@ -43,6 +46,60 @@ func (r *mutationResolver) CreateUser(ctx context.Context, input model.NewUserIn
 	return user, nil
 }
 
+// CreateOffer is the resolver for the createOffer field.
+func (r *mutationResolver) CreateOffer(ctx context.Context, input model.NewOfferInput) (*model.Offer, error) {
+	uId, err := strconv.ParseInt(input.UserID, 10, 64)
+	if err != nil {
+		return nil, errors.New("wrong user_id type")
+	}
+
+	offer := &model.Offer{
+		Title:       input.Title,
+		UserId:      uId,
+		PictureUrl:  input.PictureURL,
+		Description: input.Description,
+		Salary:      input.Salary,
+	}
+
+	v := validator.New()
+
+	if model.ValidateOffer(v, offer); !v.Valid() {
+		return nil, errors.New("wrong inputs")
+	}
+
+	err = r.Models.Offers.Insert(offer)
+
+	if err != nil {
+		r.Logger.PrintError(fmt.Errorf("%s", err), nil)
+		return nil, err
+	}
+
+	return offer, nil
+}
+
+// Salary is the resolver for the salary field.
+func (r *offerResolver) Salary(ctx context.Context, obj *model.Offer) ([]*model.SalaryByRoleResult, error) {
+	// I receive the Offer golang object here. So I convert the Salary (salaries type or []*model.SalaryByRole) into
+	// []byte with Marshal
+	salariesJSON, err := json.Marshal(obj.Salary)
+
+	if err != nil {
+		return nil, errors.New("Processing salary error")
+	}
+
+	// I convert the []byte to go object again but this time to the result that
+	// graphql is expecting, in this case is []*model.SalaryByRoleResult
+	var salaries []*model.SalaryByRoleResult
+	err = json.Unmarshal(salariesJSON, &salaries)
+
+	return salaries, nil
+}
+
+// User is the resolver for the user field.
+func (r *offerResolver) User(ctx context.Context, obj *model.Offer) (*model.User, error) {
+	return dataloaders.For(ctx).GetUser(ctx, strconv.FormatInt(obj.UserId, 10))
+}
+
 // Users is the resolver for the users field.
 func (r *queryResolver) Users(ctx context.Context) ([]*model.User, error) {
 	users, err := r.Models.Users.GetAll()
@@ -55,11 +112,27 @@ func (r *queryResolver) Users(ctx context.Context) ([]*model.User, error) {
 	return users, nil
 }
 
+// Offers is the resolver for the offers field.
+func (r *queryResolver) Offers(ctx context.Context) ([]*model.Offer, error) {
+	offers, err := r.Models.Offers.GetAll()
+
+	if err != nil {
+		r.Logger.PrintError(fmt.Errorf("%s", err), nil)
+		return nil, err
+	}
+
+	return offers, nil
+}
+
 // Mutation returns MutationResolver implementation.
 func (r *Resolver) Mutation() MutationResolver { return &mutationResolver{r} }
+
+// Offer returns OfferResolver implementation.
+func (r *Resolver) Offer() OfferResolver { return &offerResolver{r} }
 
 // Query returns QueryResolver implementation.
 func (r *Resolver) Query() QueryResolver { return &queryResolver{r} }
 
 type mutationResolver struct{ *Resolver }
+type offerResolver struct{ *Resolver }
 type queryResolver struct{ *Resolver }

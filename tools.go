@@ -6,6 +6,7 @@ package tools
 import (
 	_ "github.com/99designs/gqlgen"
 	_ "github.com/99designs/gqlgen/graphql/introspection"
+	_ "github.com/graph-gophers/dataloader"
 	_ "github.com/julienschmidt/httprouter"
 	_ "github.com/justinas/alice"
 	_ "github.com/lib/pq"

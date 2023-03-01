@@ -64,3 +64,12 @@ models:
   User:
     model:
       - itfinder.adrianescat.com/graph/model.User
+  Offer:
+    model:
+      - itfinder.adrianescat.com/graph/model.Offer
+    fields:
+      user:
+        resolver: true
+  Salaries:
+    model:
+      - itfinder.adrianescat.com/graph/model.Salaries

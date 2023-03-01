@@ -7,6 +7,7 @@ import (
 	"github.com/julienschmidt/httprouter"
 	"github.com/justinas/alice"
 	"itfinder.adrianescat.com/graph"
+	"itfinder.adrianescat.com/graph/dataloaders"
 	"itfinder.adrianescat.com/graph/model"
 	"net/http"
 )
@@ -15,6 +16,8 @@ func (app *app) routes(db *sql.DB) http.Handler {
 	router := httprouter.New()
 	router.NotFound = http.HandlerFunc(app.notFoundResponse)
 	router.MethodNotAllowed = http.HandlerFunc(app.methodNotAllowedResponse)
+
+	loader := dataloaders.NewDataLoader(&model.UserModel{DB: db})
 
 	gql := handler.NewDefaultServer(graph.NewExecutableSchema(graph.Config{Resolvers: &graph.Resolver{
 		Models: model.NewModels(db),
@@ -33,5 +36,8 @@ func (app *app) routes(db *sql.DB) http.Handler {
 
 	standard := alice.New(app.recoverPanic, app.logRequest, secureHeaders)
 
-	return standard.Then(router)
+	// wrap the query handler with middleware to inject dataloader
+	dataloaderMiddleware := dataloaders.Middleware(loader, router)
+
+	return standard.Then(dataloaderMiddleware)
 }

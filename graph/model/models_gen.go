@@ -2,9 +2,31 @@
 
 package model
 
+type NewOfferInput struct {
+	UserID      string          `json:"userId"`
+	Title       string          `json:"title"`
+	Description string          `json:"description"`
+	Salary      []*SalaryByRole `json:"salary"`
+	PictureURL  string          `json:"pictureUrl"`
+}
+
 type NewUserInput struct {
 	Name     string `json:"name"`
 	LastName string `json:"lastName"`
 	Email    string `json:"email"`
 	Password string `json:"password"`
+}
+
+type SalaryByRole struct {
+	Title    string  `json:"title"`
+	Min      float64 `json:"min"`
+	Max      float64 `json:"max"`
+	Currency string  `json:"currency"`
+}
+
+type SalaryByRoleResult struct {
+	Title    string  `json:"title"`
+	Min      float64 `json:"min"`
+	Max      float64 `json:"max"`
+	Currency string  `json:"currency"`
 }

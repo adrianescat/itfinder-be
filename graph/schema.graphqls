@@ -5,6 +5,8 @@
 # Scalars
 scalar Time
 
+# -- USER -----------------start------
+
 type User {
   id: ID!
   createdAt: Time
@@ -24,10 +26,55 @@ input NewUserInput {
   password: String!
 }
 
+# -- USER -----------------end------
+
+# -- OFFER -----------------start------
+
+type SalaryByRoleResult {
+  title: String!
+  min: Float!
+  max: Float!
+  currency: String!
+}
+
+input SalaryByRole {
+  title: String!
+  min: Float!
+  max: Float!
+  currency: String!
+}
+
+type Offer {
+  id: ID!
+  createdAt: Time
+  updatedAt: Time
+  deletedAt: Time
+  title: String!
+  pictureUrl: String
+  description: String!
+  salary: [SalaryByRoleResult!]!
+  active: Boolean
+  version: Int
+  userId: ID
+  user: User
+}
+
+input NewOfferInput {
+  userId: ID!
+  title: String!
+  description: String!
+  salary: [SalaryByRole!]!
+  pictureUrl: String!
+}
+
+# -- OFFER -----------------end------
+
 type Query {
-  users: [User!]!
+  users: [User]!
+  offers: [Offer]!
 }
 
 type Mutation {
   createUser(input: NewUserInput!): User!
+  createOffer(input: NewOfferInput!): Offer!
 }
