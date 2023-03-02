@@ -11,7 +11,6 @@ type User {
   id: ID!
   createdAt: Time
   updatedAt: Time
-  deletedAt: Time
   name:     String!
   lastname:     String!
   email:     String!
@@ -48,7 +47,6 @@ type Offer {
   id: ID!
   createdAt: Time
   updatedAt: Time
-  deletedAt: Time
   title: String!
   pictureUrl: String
   description: String!

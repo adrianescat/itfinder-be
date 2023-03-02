@@ -18,7 +18,6 @@ type Offer struct {
 	User        *User     `json:"user"`
 	CreatedAt   time.Time `json:"created_at"`
 	UpdatedAt   time.Time `json:"-"`
-	DeletedAt   time.Time `json:"-"`
 	Title       string    `json:"title"`
 	PictureUrl  string    `json:"picture_url"`
 	Description string    `json:"description"`

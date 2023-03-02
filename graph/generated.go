@@ -55,7 +55,6 @@ type ComplexityRoot struct {
 	Offer struct {
 		Active      func(childComplexity int) int
 		CreatedAt   func(childComplexity int) int
-		DeletedAt   func(childComplexity int) int
 		Description func(childComplexity int) int
 		ID          func(childComplexity int) int
 		PictureUrl  func(childComplexity int) int
@@ -82,7 +81,6 @@ type ComplexityRoot struct {
 	User struct {
 		Activated func(childComplexity int) int
 		CreatedAt func(childComplexity int) int
-		DeletedAt func(childComplexity int) int
 		Email     func(childComplexity int) int
 		ID        func(childComplexity int) int
 		Lastname  func(childComplexity int) int
@@ -158,13 +156,6 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.Offer.CreatedAt(childComplexity), true
-
-	case "Offer.deletedAt":
-		if e.complexity.Offer.DeletedAt == nil {
-			break
-		}
-
-		return e.complexity.Offer.DeletedAt(childComplexity), true
 
 	case "Offer.description":
 		if e.complexity.Offer.Description == nil {
@@ -284,13 +275,6 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.User.CreatedAt(childComplexity), true
-
-	case "User.deletedAt":
-		if e.complexity.User.DeletedAt == nil {
-			break
-		}
-
-		return e.complexity.User.DeletedAt(childComplexity), true
 
 	case "User.email":
 		if e.complexity.User.Email == nil {
@@ -551,8 +535,6 @@ func (ec *executionContext) fieldContext_Mutation_createUser(ctx context.Context
 				return ec.fieldContext_User_createdAt(ctx, field)
 			case "updatedAt":
 				return ec.fieldContext_User_updatedAt(ctx, field)
-			case "deletedAt":
-				return ec.fieldContext_User_deletedAt(ctx, field)
 			case "name":
 				return ec.fieldContext_User_name(ctx, field)
 			case "lastname":
@@ -625,8 +607,6 @@ func (ec *executionContext) fieldContext_Mutation_createOffer(ctx context.Contex
 				return ec.fieldContext_Offer_createdAt(ctx, field)
 			case "updatedAt":
 				return ec.fieldContext_Offer_updatedAt(ctx, field)
-			case "deletedAt":
-				return ec.fieldContext_Offer_deletedAt(ctx, field)
 			case "title":
 				return ec.fieldContext_Offer_title(ctx, field)
 			case "pictureUrl":
@@ -775,47 +755,6 @@ func (ec *executionContext) _Offer_updatedAt(ctx context.Context, field graphql.
 }
 
 func (ec *executionContext) fieldContext_Offer_updatedAt(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "Offer",
-		Field:      field,
-		IsMethod:   false,
-		IsResolver: false,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return nil, errors.New("field of type Time does not have child fields")
-		},
-	}
-	return fc, nil
-}
-
-func (ec *executionContext) _Offer_deletedAt(ctx context.Context, field graphql.CollectedField, obj *model.Offer) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_Offer_deletedAt(ctx, field)
-	if err != nil {
-		return graphql.Null
-	}
-	ctx = graphql.WithFieldContext(ctx, fc)
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return obj.DeletedAt, nil
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		return graphql.Null
-	}
-	res := resTmp.(time.Time)
-	fc.Result = res
-	return ec.marshalOTime2timeᚐTime(ctx, field.Selections, res)
-}
-
-func (ec *executionContext) fieldContext_Offer_deletedAt(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "Offer",
 		Field:      field,
@@ -1176,8 +1115,6 @@ func (ec *executionContext) fieldContext_Offer_user(ctx context.Context, field g
 				return ec.fieldContext_User_createdAt(ctx, field)
 			case "updatedAt":
 				return ec.fieldContext_User_updatedAt(ctx, field)
-			case "deletedAt":
-				return ec.fieldContext_User_deletedAt(ctx, field)
 			case "name":
 				return ec.fieldContext_User_name(ctx, field)
 			case "lastname":
@@ -1239,8 +1176,6 @@ func (ec *executionContext) fieldContext_Query_users(ctx context.Context, field 
 				return ec.fieldContext_User_createdAt(ctx, field)
 			case "updatedAt":
 				return ec.fieldContext_User_updatedAt(ctx, field)
-			case "deletedAt":
-				return ec.fieldContext_User_deletedAt(ctx, field)
 			case "name":
 				return ec.fieldContext_User_name(ctx, field)
 			case "lastname":
@@ -1302,8 +1237,6 @@ func (ec *executionContext) fieldContext_Query_offers(ctx context.Context, field
 				return ec.fieldContext_Offer_createdAt(ctx, field)
 			case "updatedAt":
 				return ec.fieldContext_Offer_updatedAt(ctx, field)
-			case "deletedAt":
-				return ec.fieldContext_Offer_deletedAt(ctx, field)
 			case "title":
 				return ec.fieldContext_Offer_title(ctx, field)
 			case "pictureUrl":
@@ -1744,47 +1677,6 @@ func (ec *executionContext) _User_updatedAt(ctx context.Context, field graphql.C
 }
 
 func (ec *executionContext) fieldContext_User_updatedAt(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "User",
-		Field:      field,
-		IsMethod:   false,
-		IsResolver: false,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return nil, errors.New("field of type Time does not have child fields")
-		},
-	}
-	return fc, nil
-}
-
-func (ec *executionContext) _User_deletedAt(ctx context.Context, field graphql.CollectedField, obj *model.User) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_User_deletedAt(ctx, field)
-	if err != nil {
-		return graphql.Null
-	}
-	ctx = graphql.WithFieldContext(ctx, fc)
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return obj.DeletedAt, nil
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		return graphql.Null
-	}
-	res := resTmp.(time.Time)
-	fc.Result = res
-	return ec.marshalOTime2timeᚐTime(ctx, field.Selections, res)
-}
-
-func (ec *executionContext) fieldContext_User_deletedAt(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "User",
 		Field:      field,
@@ -4019,10 +3911,6 @@ func (ec *executionContext) _Offer(ctx context.Context, sel ast.SelectionSet, ob
 
 			out.Values[i] = ec._Offer_updatedAt(ctx, field, obj)
 
-		case "deletedAt":
-
-			out.Values[i] = ec._Offer_deletedAt(ctx, field, obj)
-
 		case "title":
 
 			out.Values[i] = ec._Offer_title(ctx, field, obj)
@@ -4252,10 +4140,6 @@ func (ec *executionContext) _User(ctx context.Context, sel ast.SelectionSet, obj
 		case "updatedAt":
 
 			out.Values[i] = ec._User_updatedAt(ctx, field, obj)
-
-		case "deletedAt":
-
-			out.Values[i] = ec._User_deletedAt(ctx, field, obj)
 
 		case "name":
 

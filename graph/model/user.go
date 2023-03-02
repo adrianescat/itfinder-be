@@ -21,7 +21,6 @@ type User struct {
 	ID        int64     `json:"id"`
 	CreatedAt time.Time `json:"created_at"`
 	UpdatedAt time.Time `json:"-"`
-	DeletedAt time.Time `json:"-"`
 	Name      string    `json:"name"`
 	Lastname  string    `json:"lastname"`
 	Email     string    `json:"email"`

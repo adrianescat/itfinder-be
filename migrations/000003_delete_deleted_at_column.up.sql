@@ -1,0 +1,2 @@
+ALTER TABLE users DROP COLUMN IF EXISTS deleted_at;
+ALTER TABLE offers DROP COLUMN IF EXISTS deleted_at;
