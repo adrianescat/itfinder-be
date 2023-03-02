@@ -67,12 +67,50 @@ input NewOfferInput {
 
 # -- OFFER -----------------end------
 
+# -- PROFILE -----------------start------
+
+type Profile {
+  id: ID!
+  userId: ID
+  user: User
+  createdAt: Time
+  updatedAt: Time
+  title: String!
+  about: String!
+  status: String!
+  country: String!
+  state: String!
+  city: String!
+  pictureUrl: String
+  websiteUrl: String
+  salary: [SalaryByRoleResult!]!
+  version: Int
+}
+
+input NewProfileInput {
+  userId: ID!
+  title: String!
+  about: String!
+  status: String!
+  country: String!
+  state: String!
+  city: String!
+  pictureUrl: String!
+  websiteUrl: String!
+  salary: [SalaryByRole!]!
+}
+
+# -- PROFILE -----------------end------
+
 type Query {
   users: [User]!
   offers: [Offer]!
+  profile(id: ID!): Profile!
+  profileByUserId(userId: ID!): Profile!
 }
 
 type Mutation {
   createUser(input: NewUserInput!): User!
   createOffer(input: NewOfferInput!): Offer!
+  createProfile(input: NewProfileInput!): Profile!
 }

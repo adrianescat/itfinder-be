@@ -1,0 +1,1 @@
+ALTER TABLE profiles ADD CONSTRAINT unique_profile_for_user UNIQUE (user_id);

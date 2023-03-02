@@ -77,6 +77,42 @@ func (r *mutationResolver) CreateOffer(ctx context.Context, input model.NewOffer
 	return offer, nil
 }
 
+// CreateProfile is the resolver for the createProfile field.
+func (r *mutationResolver) CreateProfile(ctx context.Context, input model.NewProfileInput) (*model.Profile, error) {
+	uId, err := strconv.ParseInt(input.UserID, 10, 64)
+	if err != nil {
+		return nil, errors.New("wrong user_id type")
+	}
+
+	profile := &model.Profile{
+		UserId:     uId,
+		Title:      input.Title,
+		About:      input.About,
+		Status:     input.Status,
+		Country:    input.Country,
+		State:      input.State,
+		City:       input.City,
+		PictureUrl: input.PictureURL,
+		WebsiteUrl: input.WebsiteURL,
+		Salary:     input.Salary,
+	}
+
+	v := validator.New()
+
+	if model.ValidateProfile(v, profile); !v.Valid() {
+		return nil, errors.New("wrong inputs")
+	}
+
+	err = r.Models.Profiles.Insert(profile)
+
+	if err != nil {
+		r.Logger.PrintError(fmt.Errorf("%s", err), nil)
+		return nil, err
+	}
+
+	return profile, nil
+}
+
 // Salary is the resolver for the salary field.
 func (r *offerResolver) Salary(ctx context.Context, obj *model.Offer) ([]*model.SalaryByRoleResult, error) {
 	// I receive the Offer golang object here. So I convert the Salary (salaries type or []*model.SalaryByRole) into
@@ -98,6 +134,25 @@ func (r *offerResolver) Salary(ctx context.Context, obj *model.Offer) ([]*model.
 // User is the resolver for the user field.
 func (r *offerResolver) User(ctx context.Context, obj *model.Offer) (*model.User, error) {
 	return dataloaders.For(ctx).GetUser(ctx, strconv.FormatInt(obj.UserId, 10))
+}
+
+// User is the resolver for the user field.
+func (r *profileResolver) User(ctx context.Context, obj *model.Profile) (*model.User, error) {
+	return dataloaders.For(ctx).GetUser(ctx, strconv.FormatInt(obj.UserId, 10))
+}
+
+// Salary is the resolver for the salary field.
+func (r *profileResolver) Salary(ctx context.Context, obj *model.Profile) ([]*model.SalaryByRoleResult, error) {
+	salariesJSON, err := json.Marshal(obj.Salary)
+
+	if err != nil {
+		return nil, errors.New("Processing salary error")
+	}
+
+	var salaries []*model.SalaryByRoleResult
+	err = json.Unmarshal(salariesJSON, &salaries)
+
+	return salaries, nil
 }
 
 // Users is the resolver for the users field.
@@ -124,15 +179,53 @@ func (r *queryResolver) Offers(ctx context.Context) ([]*model.Offer, error) {
 	return offers, nil
 }
 
+// Profile is the resolver for the profile field.
+func (r *queryResolver) Profile(ctx context.Context, id string) (*model.Profile, error) {
+	pId, err := strconv.ParseInt(id, 10, 64)
+	if err != nil {
+		return nil, errors.New("wrong profile id type")
+	}
+
+	profile, err := r.Models.Profiles.GetProfileById(pId)
+
+	if err != nil {
+		r.Logger.PrintError(fmt.Errorf("%s", err), nil)
+		return nil, err
+	}
+
+	return profile, nil
+}
+
+// ProfileByUserID is the resolver for the profileByUserId field.
+func (r *queryResolver) ProfileByUserID(ctx context.Context, userID string) (*model.Profile, error) {
+	pId, err := strconv.ParseInt(userID, 10, 64)
+	if err != nil {
+		return nil, errors.New("wrong user_id type")
+	}
+
+	profile, err := r.Models.Profiles.GetProfileByUserId(pId)
+
+	if err != nil {
+		r.Logger.PrintError(fmt.Errorf("%s", err), nil)
+		return nil, err
+	}
+
+	return profile, nil
+}
+
 // Mutation returns MutationResolver implementation.
 func (r *Resolver) Mutation() MutationResolver { return &mutationResolver{r} }
 
 // Offer returns OfferResolver implementation.
 func (r *Resolver) Offer() OfferResolver { return &offerResolver{r} }
 
+// Profile returns ProfileResolver implementation.
+func (r *Resolver) Profile() ProfileResolver { return &profileResolver{r} }
+
 // Query returns QueryResolver implementation.
 func (r *Resolver) Query() QueryResolver { return &queryResolver{r} }
 
 type mutationResolver struct{ *Resolver }
 type offerResolver struct{ *Resolver }
+type profileResolver struct{ *Resolver }
 type queryResolver struct{ *Resolver }

@@ -64,3 +64,13 @@ func Unique[T comparable](values []T) bool {
 
 	return len(values) == len(uniqueValues)
 }
+
+func ValidatePictureUrl(v *Validator, pictureUrl string) {
+	v.Check(pictureUrl != "", "pictureUrl", "must be provided")
+	v.Check(Matches(pictureUrl, GralURlRX), "pictureUrl", "must be a valid url")
+}
+
+func ValidateWebsiteUrl(v *Validator, websiteUrl string) {
+	v.Check(websiteUrl != "", "websiteUrl", "must be provided")
+	v.Check(Matches(websiteUrl, GralURlRX), "websiteUrl", "must be a valid url")
+}

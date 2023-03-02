@@ -52,18 +52,10 @@ func ValidateOffer(v *validator.Validator, offer *Offer) {
 	v.Check(offer.Title != "", "title", "must be provided")
 	v.Check(len(offer.Title) <= 150, "title", "must not be more than 100 bytes long")
 
-	if offer.PictureUrl != "" {
-		ValidatePictureUrl(v, offer.PictureUrl)
-	}
+	validator.ValidatePictureUrl(v, offer.PictureUrl)
 
 	v.Check(offer.Description != "", "description", "must be provided")
 	v.Check(offer.Salary != nil, "salary", "must be provided")
-
-}
-
-func ValidatePictureUrl(v *validator.Validator, pictureUrl string) {
-	// v.Check(pictureUrl != "", "pictureUrl", "must be provided")
-	v.Check(validator.Matches(pictureUrl, validator.GralURlRX), "pictureUrl", "must be a valid url")
 }
 
 func (m OfferModel) Insert(offer *Offer) error {

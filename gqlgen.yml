@@ -70,6 +70,12 @@ models:
     fields:
       user:
         resolver: true
+  Profile:
+    model:
+      - itfinder.adrianescat.com/graph/model.Profile
+    fields:
+      user:
+        resolver: true
   Salaries:
     model:
       - itfinder.adrianescat.com/graph/model.Salaries

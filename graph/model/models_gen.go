@@ -10,6 +10,19 @@ type NewOfferInput struct {
 	PictureURL  string          `json:"pictureUrl"`
 }
 
+type NewProfileInput struct {
+	UserID     string          `json:"userId"`
+	Title      string          `json:"title"`
+	About      string          `json:"about"`
+	Status     string          `json:"status"`
+	Country    string          `json:"country"`
+	State      string          `json:"state"`
+	City       string          `json:"city"`
+	PictureURL string          `json:"pictureUrl"`
+	WebsiteURL string          `json:"websiteUrl"`
+	Salary     []*SalaryByRole `json:"salary"`
+}
+
 type NewUserInput struct {
 	Name     string `json:"name"`
 	LastName string `json:"lastName"`
