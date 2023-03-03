@@ -22,6 +22,7 @@ func (r *mutationResolver) CreateUser(ctx context.Context, input model.NewUserIn
 		Name:      input.Name,
 		Lastname:  input.LastName,
 		Email:     input.Email,
+		Roles:     []string{input.Role},
 		Activated: false,
 	}
 
@@ -213,6 +214,18 @@ func (r *queryResolver) ProfileByUserID(ctx context.Context, userID string) (*mo
 	return profile, nil
 }
 
+// Roles is the resolver for the roles field.
+func (r *userResolver) Roles(ctx context.Context, obj *model.User) ([]string, error) {
+	roles, err := r.Models.Users.GetRolesByUserId(obj.ID)
+
+	if err != nil {
+		r.Logger.PrintError(fmt.Errorf("%s", err), nil)
+		return nil, err
+	}
+
+	return roles, nil
+}
+
 // Mutation returns MutationResolver implementation.
 func (r *Resolver) Mutation() MutationResolver { return &mutationResolver{r} }
 
@@ -225,7 +238,11 @@ func (r *Resolver) Profile() ProfileResolver { return &profileResolver{r} }
 // Query returns QueryResolver implementation.
 func (r *Resolver) Query() QueryResolver { return &queryResolver{r} }
 
+// User returns UserResolver implementation.
+func (r *Resolver) User() UserResolver { return &userResolver{r} }
+
 type mutationResolver struct{ *Resolver }
 type offerResolver struct{ *Resolver }
 type profileResolver struct{ *Resolver }
 type queryResolver struct{ *Resolver }
+type userResolver struct{ *Resolver }

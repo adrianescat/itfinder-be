@@ -27,6 +27,7 @@ type User struct {
 	Password  Password  `json:"-"`
 	Activated bool      `json:"activated"`
 	Version   int       `json:"-"`
+	Roles     []string  `json:"roles"`
 }
 
 type Password struct {
@@ -73,6 +74,15 @@ func ValidateEmail(v *validator.Validator, email string) {
 	v.Check(validator.Matches(email, validator.EmailRX), "email", "must be a valid email address")
 }
 
+func ValidateRoles(v *validator.Validator, roles []string) {
+	permittedRoles := []string{"recruiter", "candidate"}
+	for _, role := range roles {
+		v.Check(role != "", "role", "must be provided")
+		v.Check(validator.PermittedValue(role, permittedRoles...), "role", fmt.Sprintf("%s is not a permitted role", role))
+	}
+	v.Check(validator.Unique(roles), "roles", "roles must be unique")
+}
+
 func ValidatePasswordPlaintext(v *validator.Validator, password string) {
 	v.Check(password != "", "password", "must be provided")
 	v.Check(len(password) >= 8, "password", "must be at least 8 bytes long")
@@ -103,6 +113,8 @@ func ValidateUser(v *validator.Validator, user *User) {
 	if user.Password.Hash == nil {
 		panic("missing password hash for user")
 	}
+
+	ValidateRoles(v, user.Roles)
 }
 
 func (m UserModel) Insert(user *User) error {
@@ -113,8 +125,8 @@ func (m UserModel) Insert(user *User) error {
 	`
 
 	args := []any{user.Name, user.Lastname, user.Email, user.Password.Hash, user.Activated}
-	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
 
+	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
 	defer cancel()
 
 	err := m.DB.QueryRowContext(ctx, query, args...).Scan(&user.ID, &user.CreatedAt, &user.Version)
@@ -126,6 +138,35 @@ func (m UserModel) Insert(user *User) error {
 		default:
 			return err
 		}
+	}
+
+	role := user.Roles[0]
+	query = `SELECT id from roles WHERE code = $1`
+	ctx, cancel = context.WithTimeout(context.Background(), 3*time.Second)
+	defer cancel()
+
+	var roleId int64
+
+	err = m.DB.QueryRowContext(ctx, query, role).Scan(&roleId)
+	if err != nil {
+		return err
+	}
+
+	query = `
+		INSERT INTO users_roles (user_id, role_id)
+		VALUES ($1, $2)
+		RETURNING user_id
+	`
+
+	args = []any{user.ID, roleId}
+
+	ctx, cancel = context.WithTimeout(context.Background(), 3*time.Second)
+	defer cancel()
+
+	var result int64
+	err = m.DB.QueryRowContext(ctx, query, args...).Scan(&result)
+	if err != nil {
+		return err
 	}
 
 	return nil
@@ -255,4 +296,44 @@ func (m UserModel) GetById(id int64) (*User, error) {
 	}
 
 	return &user, nil
+}
+
+func (m UserModel) GetRolesByUserId(id int64) ([]string, error) {
+	query := `
+		SELECT code FROM roles
+		INNER JOIN users_roles ur on roles.id = ur.role_id
+		WHERE ur.user_id = $1;
+	`
+
+	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
+	defer cancel()
+
+	rows, err := m.DB.QueryContext(ctx, query, id)
+
+	if err != nil {
+		return nil, err
+	}
+
+	defer rows.Close()
+
+	var roles []string
+
+	for rows.Next() {
+		var role string
+		err := rows.Scan(
+			&role,
+		)
+
+		if err != nil {
+			return nil, err
+		}
+
+		roles = append(roles, role)
+	}
+
+	if err = rows.Err(); err != nil {
+		return nil, err // Update this to return an empty Metadata struct.
+	}
+
+	return roles, nil
 }

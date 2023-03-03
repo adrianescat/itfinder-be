@@ -64,6 +64,9 @@ models:
   User:
     model:
       - itfinder.adrianescat.com/graph/model.User
+    fields:
+      roles:
+        resolver: true
   Offer:
     model:
       - itfinder.adrianescat.com/graph/model.Offer

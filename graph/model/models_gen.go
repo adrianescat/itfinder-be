@@ -28,6 +28,7 @@ type NewUserInput struct {
 	LastName string `json:"lastName"`
 	Email    string `json:"email"`
 	Password string `json:"password"`
+	Role     string `json:"role"`
 }
 
 type SalaryByRole struct {

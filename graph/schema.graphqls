@@ -16,6 +16,7 @@ type User {
   email:     String!
   activated: Boolean
   version:   Int
+  roles: [String!]!
 }
 
 input NewUserInput {
@@ -23,6 +24,7 @@ input NewUserInput {
   lastName: String!
   email: String!
   password: String!
+  role: String!
 }
 
 # -- USER -----------------end------
