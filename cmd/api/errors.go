@@ -40,3 +40,29 @@ func (app *app) errorResponse(w http.ResponseWriter, r *http.Request, status int
 		w.WriteHeader(500)
 	}
 }
+
+func (app *app) invalidAuthenticationTokenResponse(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("WWW-Authenticate", "Bearer")
+	message := "invalid or missing authentication token"
+	app.errorResponse(w, r, http.StatusUnauthorized, message)
+}
+
+// The serverErrorResponse() method will be used when our application encounters an
+// unexpected problem at runtime. It logs the detailed error message, then uses the
+// errorResponse() helper to send a 500 Internal Server Error status code and JSON
+// response (containing a generic error message) to the client.
+func (app *app) serverErrorResponse(w http.ResponseWriter, r *http.Request, err error) {
+	app.logError(r, err)
+	message := "the server encountered a problem and could not process your request"
+	app.errorResponse(w, r, http.StatusInternalServerError, message)
+}
+
+func (app *app) authenticationRequiredResponse(w http.ResponseWriter, r *http.Request) {
+	message := "you must be authenticated to access this resource"
+	app.errorResponse(w, r, http.StatusUnauthorized, message)
+}
+
+func (app *app) inactiveAccountResponse(w http.ResponseWriter, r *http.Request) {
+	message := "your user account must be activated to access this resource"
+	app.errorResponse(w, r, http.StatusForbidden, message)
+}

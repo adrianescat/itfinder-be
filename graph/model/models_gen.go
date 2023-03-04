@@ -2,6 +2,24 @@
 
 package model
 
+import (
+	"time"
+)
+
+type AuthToken struct {
+	Key    string    `json:"key"`
+	Expire time.Time `json:"expire"`
+}
+
+type AuthTokenInput struct {
+	Email    string `json:"email"`
+	Password string `json:"password"`
+}
+
+type AuthTokenResponse struct {
+	AuthenticationToken *AuthToken `json:"authentication_token"`
+}
+
 type NewOfferInput struct {
 	UserID      string          `json:"userId"`
 	Title       string          `json:"title"`

@@ -10,6 +10,7 @@ import (
 	"errors"
 	"fmt"
 	"strconv"
+	"time"
 
 	"itfinder.adrianescat.com/graph/dataloaders"
 	"itfinder.adrianescat.com/graph/model"
@@ -18,6 +19,11 @@ import (
 
 // CreateUser is the resolver for the createUser field.
 func (r *mutationResolver) CreateUser(ctx context.Context, input model.NewUserInput) (*model.User, error) {
+	_, err := RequireAuthAndActivatedUser(ctx)
+	if err != nil {
+		return nil, err
+	}
+
 	user := &model.User{
 		Name:      input.Name,
 		Lastname:  input.LastName,
@@ -26,7 +32,7 @@ func (r *mutationResolver) CreateUser(ctx context.Context, input model.NewUserIn
 		Activated: false,
 	}
 
-	err := user.Password.Set(input.Password)
+	err = user.Password.Set(input.Password)
 	if err != nil {
 		return nil, err
 	}
@@ -49,6 +55,11 @@ func (r *mutationResolver) CreateUser(ctx context.Context, input model.NewUserIn
 
 // CreateOffer is the resolver for the createOffer field.
 func (r *mutationResolver) CreateOffer(ctx context.Context, input model.NewOfferInput) (*model.Offer, error) {
+	_, err := RequireAuthAndActivatedUser(ctx)
+	if err != nil {
+		return nil, err
+	}
+
 	uId, err := strconv.ParseInt(input.UserID, 10, 64)
 	if err != nil {
 		return nil, errors.New("wrong user_id type")
@@ -80,6 +91,11 @@ func (r *mutationResolver) CreateOffer(ctx context.Context, input model.NewOffer
 
 // CreateProfile is the resolver for the createProfile field.
 func (r *mutationResolver) CreateProfile(ctx context.Context, input model.NewProfileInput) (*model.Profile, error) {
+	_, err := RequireAuthAndActivatedUser(ctx)
+	if err != nil {
+		return nil, err
+	}
+
 	uId, err := strconv.ParseInt(input.UserID, 10, 64)
 	if err != nil {
 		return nil, errors.New("wrong user_id type")
@@ -112,6 +128,52 @@ func (r *mutationResolver) CreateProfile(ctx context.Context, input model.NewPro
 	}
 
 	return profile, nil
+}
+
+// CreateAuthToken is the resolver for the createAuthToken field.
+func (r *mutationResolver) CreateAuthToken(ctx context.Context, input model.AuthTokenInput) (*model.AuthTokenResponse, error) {
+	// Validate the email and password provided by the client.
+	v := validator.New()
+
+	model.ValidateEmail(v, input.Email)
+	model.ValidatePasswordPlaintext(v, input.Password)
+
+	if !v.Valid() {
+		return nil, errors.New("email and Password should be valid")
+	}
+
+	user, err := r.Models.Users.GetByEmail(input.Email)
+
+	if err != nil {
+		switch {
+		case errors.Is(err, model.ErrRecordNotFound):
+			return nil, errors.New("invalid credentials")
+		default:
+			return nil, errors.New("server error")
+		}
+	}
+
+	// Check if the provided password matches the actual password for the user.
+	match, err := user.Password.Matches(input.Password)
+	if err != nil {
+		return nil, errors.New("server error")
+	}
+
+	if !match {
+		return nil, errors.New("invalid credentials")
+	}
+
+	token, err := r.Models.Tokens.New(user.ID, 24*time.Hour, model.ScopeAuthentication)
+	if err != nil {
+		return nil, errors.New("server error")
+	}
+
+	return &model.AuthTokenResponse{
+		AuthenticationToken: &model.AuthToken{
+			Key:    token.Plaintext,
+			Expire: token.Expiry,
+		},
+	}, nil
 }
 
 // Salary is the resolver for the salary field.
@@ -158,6 +220,11 @@ func (r *profileResolver) Salary(ctx context.Context, obj *model.Profile) ([]*mo
 
 // Users is the resolver for the users field.
 func (r *queryResolver) Users(ctx context.Context) ([]*model.User, error) {
+	_, err := RequireAuthAndActivatedUser(ctx)
+	if err != nil {
+		return nil, err
+	}
+
 	users, err := r.Models.Users.GetAll()
 
 	if err != nil {
@@ -170,6 +237,11 @@ func (r *queryResolver) Users(ctx context.Context) ([]*model.User, error) {
 
 // Offers is the resolver for the offers field.
 func (r *queryResolver) Offers(ctx context.Context) ([]*model.Offer, error) {
+	_, err := RequireAuthAndActivatedUser(ctx)
+	if err != nil {
+		return nil, err
+	}
+
 	offers, err := r.Models.Offers.GetAll()
 
 	if err != nil {
@@ -182,6 +254,11 @@ func (r *queryResolver) Offers(ctx context.Context) ([]*model.Offer, error) {
 
 // Profile is the resolver for the profile field.
 func (r *queryResolver) Profile(ctx context.Context, id string) (*model.Profile, error) {
+	_, err := RequireAuthAndActivatedUser(ctx)
+	if err != nil {
+		return nil, err
+	}
+
 	pId, err := strconv.ParseInt(id, 10, 64)
 	if err != nil {
 		return nil, errors.New("wrong profile id type")
@@ -199,6 +276,11 @@ func (r *queryResolver) Profile(ctx context.Context, id string) (*model.Profile,
 
 // ProfileByUserID is the resolver for the profileByUserId field.
 func (r *queryResolver) ProfileByUserID(ctx context.Context, userID string) (*model.Profile, error) {
+	_, err := RequireAuthAndActivatedUser(ctx)
+	if err != nil {
+		return nil, err
+	}
+
 	pId, err := strconv.ParseInt(userID, 10, 64)
 	if err != nil {
 		return nil, errors.New("wrong user_id type")
@@ -216,6 +298,11 @@ func (r *queryResolver) ProfileByUserID(ctx context.Context, userID string) (*mo
 
 // Roles is the resolver for the roles field.
 func (r *userResolver) Roles(ctx context.Context, obj *model.User) ([]string, error) {
+	_, err := RequireAuthAndActivatedUser(ctx)
+	if err != nil {
+		return nil, err
+	}
+
 	roles, err := r.Models.Users.GetRolesByUserId(obj.ID)
 
 	if err != nil {

@@ -104,6 +104,24 @@ input NewProfileInput {
 
 # -- PROFILE -----------------end------
 
+# -- TOKEN -----------------start------
+
+input AuthTokenInput {
+  email: String!
+  password: String!
+}
+
+type AuthToken {
+  key: String!
+  expire: Time!
+}
+
+type AuthTokenResponse {
+  authentication_token: AuthToken!
+}
+
+# -- TOKEN -----------------end------
+
 type Query {
   users: [User]!
   offers: [Offer]!
@@ -115,4 +133,5 @@ type Mutation {
   createUser(input: NewUserInput!): User!
   createOffer(input: NewOfferInput!): Offer!
   createProfile(input: NewProfileInput!): Profile!
+  createAuthToken(input: AuthTokenInput!): AuthTokenResponse!
 }

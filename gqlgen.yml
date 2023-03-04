@@ -82,3 +82,6 @@ models:
   Salaries:
     model:
       - itfinder.adrianescat.com/graph/model.Salaries
+  Token:
+    model:
+      - itfinder.adrianescat.com/graph/model.Token

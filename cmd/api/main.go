@@ -64,6 +64,7 @@ func main() {
 	app := &app{
 		config: cfg,
 		logger: logger,
+		models: model.NewModels(db),
 	}
 
 	app.serve(db)

@@ -34,7 +34,7 @@ func (app *app) routes(db *sql.DB) http.Handler {
 		plg.ServeHTTP(w, req)
 	})
 
-	standard := alice.New(app.recoverPanic, app.logRequest, secureHeaders)
+	standard := alice.New(app.recoverPanic, app.logRequest, secureHeaders, app.authenticate)
 
 	// wrap the query handler with middleware to inject dataloader
 	dataloaderMiddleware := dataloaders.Middleware(loader, router)

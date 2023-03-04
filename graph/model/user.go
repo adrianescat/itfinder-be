@@ -2,6 +2,7 @@ package model
 
 import (
 	"context"
+	"crypto/sha256"
 	"database/sql"
 	"errors"
 	"fmt"
@@ -336,4 +337,95 @@ func (m UserModel) GetRolesByUserId(id int64) ([]string, error) {
 	}
 
 	return roles, nil
+}
+
+func (m UserModel) GetForToken(tokenScope, tokenPlaintext string) (*User, error) {
+	// Calculate the SHA-256 hash of the plaintext token provided by the client.
+	// Remember that this returns a byte *array* with length 32, not a slice.
+	tokenHash := sha256.Sum256([]byte(tokenPlaintext))
+
+	// Set up the SQL query.
+	query := `
+		SELECT id, created_at, name, lastname,  email, activated, version
+		FROM users
+		INNER JOIN tokens
+		ON id = tokens.user_id
+		WHERE tokens.hash = $1
+		AND tokens.scope = $2
+		AND tokens.expiry > $3
+	`
+
+	// Create a slice containing the query arguments. Notice how we use the [:] operator
+	// to get a slice containing the token hash, rather than passing in the array (which
+	// is not supported by the pq driver), and that we pass the current time as the
+	// value to check against the token expiry.
+	args := []any{tokenHash[:], tokenScope, time.Now()}
+
+	var user User
+
+	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
+	defer cancel()
+
+	// Execute the query, scanning the return values into a User struct. If no matching
+	// record is found we return an ErrRecordNotFound error.
+	err := m.DB.QueryRowContext(ctx, query, args...).Scan(
+		&user.ID,
+		&user.CreatedAt,
+		&user.Name,
+		&user.Lastname,
+		&user.Email,
+		&user.Activated,
+		&user.Version,
+	)
+
+	if err != nil {
+		switch {
+		case errors.Is(err, sql.ErrNoRows):
+			return nil, ErrRecordNotFound
+		default:
+			return nil, err
+		}
+	}
+
+	// Return the matching user.
+	return &user, nil
+}
+
+func (m UserModel) GetByEmail(email string) (*User, error) {
+	query := `
+		SELECT id, created_at, updated_at, name, lastname, email, activated, password_hash, version
+		FROM users
+		WHERE email = $1
+	`
+	var user User
+
+	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
+	defer cancel()
+
+	err := m.DB.QueryRowContext(ctx, query, email).Scan(
+		&user.ID,
+		&user.CreatedAt,
+		&user.UpdatedAt,
+		&user.Name,
+		&user.Lastname,
+		&user.Email,
+		&user.Activated,
+		&user.Password.Hash,
+		&user.Version,
+	)
+
+	if err != nil {
+		switch {
+		case errors.Is(err, sql.ErrNoRows):
+			return nil, ErrRecordNotFound
+		default:
+			return nil, err
+		}
+	}
+
+	return &user, nil
+}
+
+func (u *User) IsAnonymous() bool {
+	return u == AnonymousUser
 }
