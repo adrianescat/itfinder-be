@@ -20,6 +20,10 @@ type AuthTokenResponse struct {
 	AuthenticationToken *AuthToken `json:"authentication_token"`
 }
 
+type LogoutResponse struct {
+	Success bool `json:"success"`
+}
+
 type NewOfferInput struct {
 	UserID      string          `json:"userId"`
 	Title       string          `json:"title"`

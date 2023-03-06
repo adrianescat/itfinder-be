@@ -176,6 +176,30 @@ func (r *mutationResolver) CreateAuthToken(ctx context.Context, input model.Auth
 	}, nil
 }
 
+// LogOut is the resolver for the logOut field.
+func (r *mutationResolver) LogOut(ctx context.Context, userID string) (*model.LogoutResponse, error) {
+	_, err := RequireAuthAndActivatedUser(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	uId, err := strconv.ParseInt(userID, 10, 64)
+	if err != nil {
+		return nil, errors.New("wrong profile id type")
+	}
+
+	err = r.Models.Tokens.DeleteAllForUser(model.ScopeAuthentication, uId)
+
+	if err != nil {
+		r.Logger.PrintError(fmt.Errorf("%s", err), nil)
+		return nil, err
+	}
+
+	return &model.LogoutResponse{
+		Success: true,
+	}, nil
+}
+
 // Salary is the resolver for the salary field.
 func (r *offerResolver) Salary(ctx context.Context, obj *model.Offer) ([]*model.SalaryByRoleResult, error) {
 	// I receive the Offer golang object here. So I convert the Salary (salaries type or []*model.SalaryByRole) into

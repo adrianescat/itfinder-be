@@ -122,6 +122,14 @@ type AuthTokenResponse {
 
 # -- TOKEN -----------------end------
 
+# -- LOGOUT -----------------start------
+
+type LogoutResponse {
+  success: Boolean!
+}
+
+# -- LOGOUT -----------------end------
+
 type Query {
   users: [User]!
   offers: [Offer]!
@@ -134,4 +142,5 @@ type Mutation {
   createOffer(input: NewOfferInput!): Offer!
   createProfile(input: NewProfileInput!): Profile!
   createAuthToken(input: AuthTokenInput!): AuthTokenResponse!
+  logOut(userId: ID!): LogoutResponse!
 }
