@@ -200,6 +200,72 @@ func (r *mutationResolver) LogOut(ctx context.Context, userID string) (*model.Lo
 	}, nil
 }
 
+// CreateBookmark is the resolver for the createBookmark field.
+func (r *mutationResolver) CreateBookmark(ctx context.Context, userID string, profileID string) (*model.BookmarkResponse, error) {
+	user, err := RequireAuthAndActivatedUser(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	uId, err := strconv.ParseInt(userID, 10, 64)
+	if err != nil {
+		return nil, errors.New("wrong user_id type")
+	}
+
+	pId, err := strconv.ParseInt(profileID, 10, 64)
+	if err != nil {
+		return nil, errors.New("wrong profile_id type")
+	}
+
+	if user.ID != uId {
+		return nil, errors.New("you can create only a bookmark for you")
+	}
+
+	err = r.Models.Users.CreateProfileBookmark(uId, pId)
+
+	if err != nil {
+		r.Logger.PrintError(fmt.Errorf("%s", err), nil)
+		return nil, err
+	}
+
+	return &model.BookmarkResponse{
+		Success: true,
+	}, nil
+}
+
+// DeleteBookmark is the resolver for the deleteBookmark field.
+func (r *mutationResolver) DeleteBookmark(ctx context.Context, userID string, profileID string) (*model.BookmarkResponse, error) {
+	user, err := RequireAuthAndActivatedUser(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	uId, err := strconv.ParseInt(userID, 10, 64)
+	if err != nil {
+		return nil, errors.New("wrong user_id type")
+	}
+
+	pId, err := strconv.ParseInt(profileID, 10, 64)
+	if err != nil {
+		return nil, errors.New("wrong profile_id type")
+	}
+
+	if user.ID != uId {
+		return nil, errors.New("you can delete only your bookmarks")
+	}
+
+	err = r.Models.Users.DeleteProfileBookmark(uId, pId)
+
+	if err != nil {
+		r.Logger.PrintError(fmt.Errorf("%s", err), nil)
+		return nil, err
+	}
+
+	return &model.BookmarkResponse{
+		Success: true,
+	}, nil
+}
+
 // Salary is the resolver for the salary field.
 func (r *offerResolver) Salary(ctx context.Context, obj *model.Offer) ([]*model.SalaryByRoleResult, error) {
 	// I receive the Offer golang object here. So I convert the Salary (salaries type or []*model.SalaryByRole) into
@@ -318,6 +384,32 @@ func (r *queryResolver) ProfileByUserID(ctx context.Context, userID string) (*mo
 	}
 
 	return profile, nil
+}
+
+// Bookmarks is the resolver for the bookmarks field.
+func (r *queryResolver) Bookmarks(ctx context.Context, userID string) ([]*model.Profile, error) {
+	user, err := RequireAuthAndActivatedUser(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	uId, err := strconv.ParseInt(userID, 10, 64)
+	if err != nil {
+		return nil, errors.New("wrong user_id type")
+	}
+
+	if user.ID != uId {
+		return nil, errors.New("you can query only your bookmarks")
+	}
+
+	profiles, err := r.Models.Users.GetAllBookmarksByUserId(uId)
+
+	if err != nil {
+		r.Logger.PrintError(fmt.Errorf("%s", err), nil)
+		return nil, err
+	}
+
+	return profiles, nil
 }
 
 // Roles is the resolver for the roles field.

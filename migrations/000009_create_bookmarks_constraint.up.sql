@@ -1,0 +1,1 @@
+ALTER TABLE profile_bookmarks ADD UNIQUE (user_id, profile_id)

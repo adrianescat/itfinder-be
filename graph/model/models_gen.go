@@ -20,6 +20,10 @@ type AuthTokenResponse struct {
 	AuthenticationToken *AuthToken `json:"authentication_token"`
 }
 
+type BookmarkResponse struct {
+	Success bool `json:"success"`
+}
+
 type LogoutResponse struct {
 	Success bool `json:"success"`
 }

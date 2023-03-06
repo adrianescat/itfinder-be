@@ -130,11 +130,20 @@ type LogoutResponse {
 
 # -- LOGOUT -----------------end------
 
+# -- BOOKMARKS -----------------start------
+
+type BookmarkResponse {
+  success: Boolean!
+}
+
+# -- BOOKMARKS -----------------end------
+
 type Query {
   users: [User]!
   offers: [Offer]!
   profile(id: ID!): Profile!
   profileByUserId(userId: ID!): Profile!
+  bookmarks(userId: ID!): [Profile!]!
 }
 
 type Mutation {
@@ -143,4 +152,6 @@ type Mutation {
   createProfile(input: NewProfileInput!): Profile!
   createAuthToken(input: AuthTokenInput!): AuthTokenResponse!
   logOut(userId: ID!): LogoutResponse!
+  createBookmark(userId: ID!, profileID: ID!): BookmarkResponse!
+  deleteBookmark(userId: ID!, profileID: ID!): BookmarkResponse!
 }
