@@ -135,3 +135,86 @@ func (m OfferModel) GetAll() ([]*Offer, error) {
 
 	return offers, nil
 }
+
+func (m OfferModel) CreateApplicant(offerId int64, profileId int64) error {
+	query := `
+		INSERT INTO offers_applicants (offer_id, profile_id)
+		VALUES ($1, $2)
+		RETURNING offer_id, profile_id 
+	`
+
+	args := []any{offerId, profileId}
+
+	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
+	defer cancel()
+
+	_, err := m.DB.ExecContext(ctx, query, args...)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (m OfferModel) GetAllApplicants(id int64) ([]*Profile, error) {
+	query := `
+		SELECT p.id, p.user_id, p.created_at, p.title, p.about, p.status, p.country, p.state, p.city, p.picture_url, p.website_url, p.salary, p.version
+		FROM profiles p
+		INNER JOIN offers_applicants oa on p.id = oa.profile_id
+		INNER JOIN offers o on o.id = oa.offer_id
+		WHERE o.id = $1
+	`
+
+	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
+	defer cancel()
+
+	rows, err := m.DB.QueryContext(ctx, query, id)
+
+	if err != nil {
+		return nil, err
+	}
+
+	defer rows.Close()
+
+	var profiles []*Profile
+
+	for rows.Next() {
+		var profile Profile
+		var salaries []byte
+		err := rows.Scan(
+			&profile.ID,
+			&profile.UserId,
+			&profile.CreatedAt,
+			&profile.Title,
+			&profile.About,
+			&profile.Status,
+			&profile.Country,
+			&profile.State,
+			&profile.City,
+			&profile.PictureUrl,
+			&profile.WebsiteUrl,
+			&salaries,
+			&profile.Version,
+		)
+
+		if err != nil {
+			return nil, err
+		}
+
+		var salariesObj Salaries
+		err = json.Unmarshal(salaries, &salariesObj)
+		profile.Salary = salariesObj
+
+		if err != nil {
+			return nil, err
+		}
+
+		profiles = append(profiles, &profile)
+	}
+
+	if err = rows.Err(); err != nil {
+		return nil, err // Update this to return an empty Metadata struct.
+	}
+
+	return profiles, nil
+}

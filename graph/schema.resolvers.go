@@ -266,6 +266,37 @@ func (r *mutationResolver) DeleteBookmark(ctx context.Context, userID string, pr
 	}, nil
 }
 
+// ApplyToOffer is the resolver for the applyToOffer field.
+func (r *mutationResolver) ApplyToOffer(ctx context.Context, offerID string, profileID string) (*model.ApplyResponse, error) {
+	_, err := RequireAuthAndActivatedUser(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	// TODO: check if the passed profile_id is from the user making the request
+
+	oId, err := strconv.ParseInt(offerID, 10, 64)
+	if err != nil {
+		return nil, errors.New("wrong offer_id type")
+	}
+
+	pId, err := strconv.ParseInt(profileID, 10, 64)
+	if err != nil {
+		return nil, errors.New("wrong profile_id type")
+	}
+
+	err = r.Models.Offers.CreateApplicant(oId, pId)
+
+	if err != nil {
+		r.Logger.PrintError(fmt.Errorf("%s", err), nil)
+		return nil, err
+	}
+
+	return &model.ApplyResponse{
+		Success: true,
+	}, nil
+}
+
 // Salary is the resolver for the salary field.
 func (r *offerResolver) Salary(ctx context.Context, obj *model.Offer) ([]*model.SalaryByRoleResult, error) {
 	// I receive the Offer golang object here. So I convert the Salary (salaries type or []*model.SalaryByRole) into
@@ -403,6 +434,28 @@ func (r *queryResolver) Bookmarks(ctx context.Context, userID string) ([]*model.
 	}
 
 	profiles, err := r.Models.Users.GetAllBookmarksByUserId(uId)
+
+	if err != nil {
+		r.Logger.PrintError(fmt.Errorf("%s", err), nil)
+		return nil, err
+	}
+
+	return profiles, nil
+}
+
+// Applicants is the resolver for the applicants field.
+func (r *queryResolver) Applicants(ctx context.Context, offerID string) ([]*model.Profile, error) {
+	_, err := RequireAuthAndActivatedUser(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	oId, err := strconv.ParseInt(offerID, 10, 64)
+	if err != nil {
+		return nil, errors.New("wrong user_id type")
+	}
+
+	profiles, err := r.Models.Offers.GetAllApplicants(oId)
 
 	if err != nil {
 		r.Logger.PrintError(fmt.Errorf("%s", err), nil)

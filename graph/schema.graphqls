@@ -138,12 +138,21 @@ type BookmarkResponse {
 
 # -- BOOKMARKS -----------------end------
 
+# -- APPLICANT -----------------start------
+
+type ApplyResponse {
+  success: Boolean!
+}
+
+# -- APPLICANT -----------------end------
+
 type Query {
   users: [User]!
   offers: [Offer]!
   profile(id: ID!): Profile!
   profileByUserId(userId: ID!): Profile!
   bookmarks(userId: ID!): [Profile!]!
+  applicants(offerId: ID!): [Profile!]!
 }
 
 type Mutation {
@@ -154,4 +163,5 @@ type Mutation {
   logOut(userId: ID!): LogoutResponse!
   createBookmark(userId: ID!, profileID: ID!): BookmarkResponse!
   deleteBookmark(userId: ID!, profileID: ID!): BookmarkResponse!
+  applyToOffer(offerId: ID!, profileId: ID!): ApplyResponse!
 }

@@ -119,7 +119,7 @@ func ValidateUser(v *validator.Validator, user *User) {
 	ValidateRoles(v, user.Roles)
 }
 
-func (m UserModel) Insert(user *User) error {
+func (m *UserModel) Insert(user *User) error {
 	query := `
 		INSERT INTO users (name, lastname, email, password_hash, activated)
 		VALUES ($1, $2, $3, $4, $5)
@@ -174,7 +174,7 @@ func (m UserModel) Insert(user *User) error {
 	return nil
 }
 
-func (m UserModel) GetAll() ([]*User, error) {
+func (m *UserModel) GetAll() ([]*User, error) {
 	query := `
 		SELECT id, created_at, updated_at, name, lastname, email, activated, version
 		FROM users`
@@ -221,7 +221,7 @@ func (m UserModel) GetAll() ([]*User, error) {
 	return users, nil
 }
 
-func (m UserModel) GetUsersByIds(ids []string) ([]*User, error) {
+func (m *UserModel) GetUsersByIds(ids []string) ([]*User, error) {
 	idString := strings.Join(ids, ",")
 
 	query := fmt.Sprintf("SELECT id, created_at, updated_at, name, lastname, email, activated, version FROM users WHERE id IN (%s)", idString)
@@ -266,7 +266,7 @@ func (m UserModel) GetUsersByIds(ids []string) ([]*User, error) {
 	return users, nil
 }
 
-func (m UserModel) GetById(id int64) (*User, error) {
+func (m *UserModel) GetById(id int64) (*User, error) {
 	query := `
 		SELECT id, created_at, name, lastname, email, activated, version
 		FROM users
@@ -300,7 +300,7 @@ func (m UserModel) GetById(id int64) (*User, error) {
 	return &user, nil
 }
 
-func (m UserModel) GetRolesByUserId(id int64) ([]string, error) {
+func (m *UserModel) GetRolesByUserId(id int64) ([]string, error) {
 	query := `
 		SELECT code FROM roles
 		INNER JOIN users_roles ur on roles.id = ur.role_id
@@ -340,7 +340,7 @@ func (m UserModel) GetRolesByUserId(id int64) ([]string, error) {
 	return roles, nil
 }
 
-func (m UserModel) GetForToken(tokenScope, tokenPlaintext string) (*User, error) {
+func (m *UserModel) GetForToken(tokenScope, tokenPlaintext string) (*User, error) {
 	// Calculate the SHA-256 hash of the plaintext token provided by the client.
 	// Remember that this returns a byte *array* with length 32, not a slice.
 	tokenHash := sha256.Sum256([]byte(tokenPlaintext))
@@ -392,7 +392,7 @@ func (m UserModel) GetForToken(tokenScope, tokenPlaintext string) (*User, error)
 	return &user, nil
 }
 
-func (m UserModel) GetByEmail(email string) (*User, error) {
+func (m *UserModel) GetByEmail(email string) (*User, error) {
 	query := `
 		SELECT id, created_at, updated_at, name, lastname, email, activated, password_hash, version
 		FROM users
@@ -427,7 +427,7 @@ func (m UserModel) GetByEmail(email string) (*User, error) {
 	return &user, nil
 }
 
-func (m UserModel) GetAllBookmarksByUserId(id int64) ([]*Profile, error) {
+func (m *UserModel) GetAllBookmarksByUserId(id int64) ([]*Profile, error) {
 	query := `
 		SELECT p.id, p.user_id, p.created_at, p.title, p.about, p.status, p.country, p.state, p.city, p.picture_url, p.website_url, p.salary, p.version
 		FROM profiles p

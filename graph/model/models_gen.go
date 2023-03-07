@@ -6,6 +6,10 @@ import (
 	"time"
 )
 
+type ApplyResponse struct {
+	Success bool `json:"success"`
+}
+
 type AuthToken struct {
 	Key    string    `json:"key"`
 	Expire time.Time `json:"expire"`

@@ -49,6 +49,10 @@ type DirectiveRoot struct {
 }
 
 type ComplexityRoot struct {
+	ApplyResponse struct {
+		Success func(childComplexity int) int
+	}
+
 	AuthToken struct {
 		Expire func(childComplexity int) int
 		Key    func(childComplexity int) int
@@ -67,6 +71,7 @@ type ComplexityRoot struct {
 	}
 
 	Mutation struct {
+		ApplyToOffer    func(childComplexity int, offerID string, profileID string) int
 		CreateAuthToken func(childComplexity int, input model.AuthTokenInput) int
 		CreateBookmark  func(childComplexity int, userID string, profileID string) int
 		CreateOffer     func(childComplexity int, input model.NewOfferInput) int
@@ -109,6 +114,7 @@ type ComplexityRoot struct {
 	}
 
 	Query struct {
+		Applicants      func(childComplexity int, offerID string) int
 		Bookmarks       func(childComplexity int, userID string) int
 		Offers          func(childComplexity int) int
 		Profile         func(childComplexity int, id string) int
@@ -144,6 +150,7 @@ type MutationResolver interface {
 	LogOut(ctx context.Context, userID string) (*model.LogoutResponse, error)
 	CreateBookmark(ctx context.Context, userID string, profileID string) (*model.BookmarkResponse, error)
 	DeleteBookmark(ctx context.Context, userID string, profileID string) (*model.BookmarkResponse, error)
+	ApplyToOffer(ctx context.Context, offerID string, profileID string) (*model.ApplyResponse, error)
 }
 type OfferResolver interface {
 	Salary(ctx context.Context, obj *model.Offer) ([]*model.SalaryByRoleResult, error)
@@ -161,6 +168,7 @@ type QueryResolver interface {
 	Profile(ctx context.Context, id string) (*model.Profile, error)
 	ProfileByUserID(ctx context.Context, userID string) (*model.Profile, error)
 	Bookmarks(ctx context.Context, userID string) ([]*model.Profile, error)
+	Applicants(ctx context.Context, offerID string) ([]*model.Profile, error)
 }
 type UserResolver interface {
 	Roles(ctx context.Context, obj *model.User) ([]string, error)
@@ -180,6 +188,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 	ec := executionContext{nil, e}
 	_ = ec
 	switch typeName + "." + field {
+
+	case "ApplyResponse.success":
+		if e.complexity.ApplyResponse.Success == nil {
+			break
+		}
+
+		return e.complexity.ApplyResponse.Success(childComplexity), true
 
 	case "AuthToken.expire":
 		if e.complexity.AuthToken.Expire == nil {
@@ -215,6 +230,18 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.LogoutResponse.Success(childComplexity), true
+
+	case "Mutation.applyToOffer":
+		if e.complexity.Mutation.ApplyToOffer == nil {
+			break
+		}
+
+		args, err := ec.field_Mutation_applyToOffer_args(context.TODO(), rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Mutation.ApplyToOffer(childComplexity, args["offerId"].(string), args["profileId"].(string)), true
 
 	case "Mutation.createAuthToken":
 		if e.complexity.Mutation.CreateAuthToken == nil {
@@ -482,6 +509,18 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.Profile.WebsiteUrl(childComplexity), true
 
+	case "Query.applicants":
+		if e.complexity.Query.Applicants == nil {
+			break
+		}
+
+		args, err := ec.field_Query_applicants_args(context.TODO(), rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Query.Applicants(childComplexity, args["offerId"].(string)), true
+
 	case "Query.bookmarks":
 		if e.complexity.Query.Bookmarks == nil {
 			break
@@ -715,6 +754,30 @@ var parsedSchema = gqlparser.MustLoadSchema(sources...)
 
 // region    ***************************** args.gotpl *****************************
 
+func (ec *executionContext) field_Mutation_applyToOffer_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+	var err error
+	args := map[string]interface{}{}
+	var arg0 string
+	if tmp, ok := rawArgs["offerId"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("offerId"))
+		arg0, err = ec.unmarshalNID2string(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["offerId"] = arg0
+	var arg1 string
+	if tmp, ok := rawArgs["profileId"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("profileId"))
+		arg1, err = ec.unmarshalNID2string(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["profileId"] = arg1
+	return args, nil
+}
+
 func (ec *executionContext) field_Mutation_createAuthToken_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
 	var err error
 	args := map[string]interface{}{}
@@ -853,6 +916,21 @@ func (ec *executionContext) field_Query___type_args(ctx context.Context, rawArgs
 	return args, nil
 }
 
+func (ec *executionContext) field_Query_applicants_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+	var err error
+	args := map[string]interface{}{}
+	var arg0 string
+	if tmp, ok := rawArgs["offerId"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("offerId"))
+		arg0, err = ec.unmarshalNID2string(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["offerId"] = arg0
+	return args, nil
+}
+
 func (ec *executionContext) field_Query_bookmarks_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
 	var err error
 	args := map[string]interface{}{}
@@ -935,6 +1013,50 @@ func (ec *executionContext) field___Type_fields_args(ctx context.Context, rawArg
 // endregion ************************** directives.gotpl **************************
 
 // region    **************************** field.gotpl *****************************
+
+func (ec *executionContext) _ApplyResponse_success(ctx context.Context, field graphql.CollectedField, obj *model.ApplyResponse) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_ApplyResponse_success(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Success, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(bool)
+	fc.Result = res
+	return ec.marshalNBoolean2bool(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_ApplyResponse_success(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "ApplyResponse",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Boolean does not have child fields")
+		},
+	}
+	return fc, nil
+}
 
 func (ec *executionContext) _AuthToken_key(ctx context.Context, field graphql.CollectedField, obj *model.AuthToken) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_AuthToken_key(ctx, field)
@@ -1626,6 +1748,64 @@ func (ec *executionContext) fieldContext_Mutation_deleteBookmark(ctx context.Con
 	}()
 	ctx = graphql.WithFieldContext(ctx, fc)
 	if fc.Args, err = ec.field_Mutation_deleteBookmark_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Mutation_applyToOffer(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Mutation_applyToOffer(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Mutation().ApplyToOffer(rctx, fc.Args["offerId"].(string), fc.Args["profileId"].(string))
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(*model.ApplyResponse)
+	fc.Result = res
+	return ec.marshalNApplyResponse2ᚖitfinderᚗadrianescatᚗcomᚋgraphᚋmodelᚐApplyResponse(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Mutation_applyToOffer(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Mutation",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "success":
+				return ec.fieldContext_ApplyResponse_success(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type ApplyResponse", field.Name)
+		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_Mutation_applyToOffer_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
 		ec.Error(ctx, err)
 		return
 	}
@@ -3176,6 +3356,92 @@ func (ec *executionContext) fieldContext_Query_bookmarks(ctx context.Context, fi
 	}()
 	ctx = graphql.WithFieldContext(ctx, fc)
 	if fc.Args, err = ec.field_Query_bookmarks_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Query_applicants(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Query_applicants(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Query().Applicants(rctx, fc.Args["offerId"].(string))
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.([]*model.Profile)
+	fc.Result = res
+	return ec.marshalNProfile2ᚕᚖitfinderᚗadrianescatᚗcomᚋgraphᚋmodelᚐProfileᚄ(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Query_applicants(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Query",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "id":
+				return ec.fieldContext_Profile_id(ctx, field)
+			case "userId":
+				return ec.fieldContext_Profile_userId(ctx, field)
+			case "user":
+				return ec.fieldContext_Profile_user(ctx, field)
+			case "createdAt":
+				return ec.fieldContext_Profile_createdAt(ctx, field)
+			case "updatedAt":
+				return ec.fieldContext_Profile_updatedAt(ctx, field)
+			case "title":
+				return ec.fieldContext_Profile_title(ctx, field)
+			case "about":
+				return ec.fieldContext_Profile_about(ctx, field)
+			case "status":
+				return ec.fieldContext_Profile_status(ctx, field)
+			case "country":
+				return ec.fieldContext_Profile_country(ctx, field)
+			case "state":
+				return ec.fieldContext_Profile_state(ctx, field)
+			case "city":
+				return ec.fieldContext_Profile_city(ctx, field)
+			case "pictureUrl":
+				return ec.fieldContext_Profile_pictureUrl(ctx, field)
+			case "websiteUrl":
+				return ec.fieldContext_Profile_websiteUrl(ctx, field)
+			case "salary":
+				return ec.fieldContext_Profile_salary(ctx, field)
+			case "version":
+				return ec.fieldContext_Profile_version(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type Profile", field.Name)
+		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_Query_applicants_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
 		ec.Error(ctx, err)
 		return
 	}
@@ -5958,6 +6224,34 @@ func (ec *executionContext) unmarshalInputSalaryByRole(ctx context.Context, obj 
 
 // region    **************************** object.gotpl ****************************
 
+var applyResponseImplementors = []string{"ApplyResponse"}
+
+func (ec *executionContext) _ApplyResponse(ctx context.Context, sel ast.SelectionSet, obj *model.ApplyResponse) graphql.Marshaler {
+	fields := graphql.CollectFields(ec.OperationContext, sel, applyResponseImplementors)
+	out := graphql.NewFieldSet(fields)
+	var invalids uint32
+	for i, field := range fields {
+		switch field.Name {
+		case "__typename":
+			out.Values[i] = graphql.MarshalString("ApplyResponse")
+		case "success":
+
+			out.Values[i] = ec._ApplyResponse_success(ctx, field, obj)
+
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
+		default:
+			panic("unknown field " + strconv.Quote(field.Name))
+		}
+	}
+	out.Dispatch()
+	if invalids > 0 {
+		return graphql.Null
+	}
+	return out
+}
+
 var authTokenImplementors = []string{"AuthToken"}
 
 func (ec *executionContext) _AuthToken(ctx context.Context, sel ast.SelectionSet, obj *model.AuthToken) graphql.Marshaler {
@@ -6135,6 +6429,12 @@ func (ec *executionContext) _Mutation(ctx context.Context, sel ast.SelectionSet)
 
 			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
 				return ec._Mutation_deleteBookmark(ctx, field)
+			})
+
+		case "applyToOffer":
+
+			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
+				return ec._Mutation_applyToOffer(ctx, field)
 			})
 
 		default:
@@ -6487,6 +6787,26 @@ func (ec *executionContext) _Query(ctx context.Context, sel ast.SelectionSet) gr
 					}
 				}()
 				res = ec._Query_bookmarks(ctx, field)
+				return res
+			}
+
+			rrm := func(ctx context.Context) graphql.Marshaler {
+				return ec.OperationContext.RootResolverMiddleware(ctx, innerFunc)
+			}
+
+			out.Concurrently(i, func() graphql.Marshaler {
+				return rrm(innerCtx)
+			})
+		case "applicants":
+			field := field
+
+			innerFunc := func(ctx context.Context) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._Query_applicants(ctx, field)
 				return res
 			}
 
@@ -6968,6 +7288,20 @@ func (ec *executionContext) ___Type(ctx context.Context, sel ast.SelectionSet, o
 // endregion **************************** object.gotpl ****************************
 
 // region    ***************************** type.gotpl *****************************
+
+func (ec *executionContext) marshalNApplyResponse2itfinderᚗadrianescatᚗcomᚋgraphᚋmodelᚐApplyResponse(ctx context.Context, sel ast.SelectionSet, v model.ApplyResponse) graphql.Marshaler {
+	return ec._ApplyResponse(ctx, sel, &v)
+}
+
+func (ec *executionContext) marshalNApplyResponse2ᚖitfinderᚗadrianescatᚗcomᚋgraphᚋmodelᚐApplyResponse(ctx context.Context, sel ast.SelectionSet, v *model.ApplyResponse) graphql.Marshaler {
+	if v == nil {
+		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
+			ec.Errorf(ctx, "the requested element is null which the schema does not allow")
+		}
+		return graphql.Null
+	}
+	return ec._ApplyResponse(ctx, sel, v)
+}
 
 func (ec *executionContext) marshalNAuthToken2ᚖitfinderᚗadrianescatᚗcomᚋgraphᚋmodelᚐAuthToken(ctx context.Context, sel ast.SelectionSet, v *model.AuthToken) graphql.Marshaler {
 	if v == nil {
