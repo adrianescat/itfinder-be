@@ -30,6 +30,9 @@ type config struct {
 	port int
 	env  string
 	db   dbConfig
+	cors struct {
+		trustedOrigins []string
+	}
 }
 
 type app struct {
@@ -49,6 +52,9 @@ func main() {
 	cfg.db.maxOpenConns = genv.Key("DB-MAX-OPEN-CONNS").Default(25).Int()
 	cfg.db.maxIdleConns = genv.Key("DB-MAX-IDLE-CONNS").Default(25).Int()
 	cfg.db.maxIdleTime = genv.Key("DB-MAX-IDLE-TIME").Default("15m").String()
+
+	trustedDomains := []string{"http://localhost:3000"}
+	cfg.cors.trustedOrigins = trustedDomains
 
 	logger := jsonlog.New(os.Stdout, jsonlog.LevelInfo)
 
